@@ -1,0 +1,32 @@
+{
+  "name": "@m4rc3l05/sqlite-tag",
+  "version": "0.0.0",
+  "description": "Sqlite tag template",
+  "main": "./dist/mod.js",
+  "type": "module",
+  "exports": {
+    ".": "./dist/mod.js"
+  },
+  "scripts": {
+    "pretranspile": "rm -rf ./dist || :",
+    "transpile": "tsc -p ./tsconfig.json --emitDeclarationOnly --allowImportingTsExtensions && swc ./src/mod.ts -o ./dist/mod.js",
+    "test": "node --no-warnings --loader ts-node/esm --test **/*.test.ts",
+    "lint": "biome check . && tsc -p tsconfig.json --noEmit --skipLibCheck",
+    "lint-staged": "lint-staged",
+    "version": "offline-github-changelog --next=${npm_new_version} --max-commits 100 > CHANGELOG.md && git add -A CHANGELOG.md"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "1.5.3",
+    "@swc/cli": "0.3.9",
+    "@swc/core": "1.4.1",
+    "@types/node": "20.11.17",
+    "husky": "9.0.11",
+    "lint-staged": "15.2.2",
+    "offline-github-changelog": "3.1.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3"
+  }
+}
