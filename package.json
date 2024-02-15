@@ -13,7 +13,7 @@
     "test": "node --no-warnings --loader ts-node/esm --test **/*.test.ts",
     "lint": "biome check . && tsc -p tsconfig.json --noEmit --skipLibCheck",
     "lint-staged": "lint-staged",
-    "version": "offline-github-changelog --next=${npm_new_version} --max-commits 100 > CHANGELOG.md && git add -A CHANGELOG.md"
+    "version": "offline-github-changelog --next=${npm_new_version} --max-commits 100 | sed -e '/Release v.*/d;s/ (\\[.*\\]\\(.*\\))//gm' > CHANGELOG.md && git add -A CHANGELOG.md"
   },
   "keywords": [],
   "author": "",
