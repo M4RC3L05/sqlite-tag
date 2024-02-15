@@ -8,6 +8,7 @@
     ".": "./dist/mod.js"
   },
   "scripts": {
+    "prepare": "husky || :",
     "pretranspile": "rm -rf ./dist || :",
     "transpile": "tsc -p ./tsconfig.json --emitDeclarationOnly --allowImportingTsExtensions && swc ./src/mod.ts -o ./dist/mod.js",
     "test": "node --no-warnings --loader ts-node/esm --test **/*.test.ts",
