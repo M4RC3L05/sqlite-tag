@@ -1,3 +1,40 @@
+import { type Buffer } from "node:buffer";
+
+export type TSqlFragmentIdentifier = SqlFragmentIdentifier;
+
+class SqlFragmentIdentifier {
+  #value = "";
+
+  #escape(value: string) {
+    return String(value)
+      .split(".")
+      .map((segment) => `"${segment.trim().replaceAll('"', "")}"`)
+      .join(".");
+  }
+
+  constructor(value: string) {
+    this.#value = value;
+  }
+
+  get value(): string {
+    return this.#escape(this.#value);
+  }
+}
+
+export type TSqlFragmentRaw = SqlFragmentRaw;
+
+class SqlFragmentRaw {
+  #value: string | number;
+
+  constructor(value: string | number) {
+    this.#value = value;
+  }
+
+  get value(): string {
+    return String(this.#value);
+  }
+}
+
 export type SqlBoundIgnoredValues = undefined;
 export type SqlBoundArrayValue = SqlBoundValues[];
 export type SqlBoundPrimitiveValue =
@@ -6,7 +43,17 @@ export type SqlBoundPrimitiveValue =
   | null
   | bigint
   | Buffer
-  | NodeJS.TypedArray;
+  | Uint8Array
+  | Uint8ClampedArray
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | BigUint64Array
+  | BigInt64Array
+  | Float32Array
+  | Float64Array;
 export type SqlBoundCustomValues =
   | TSqlFragment
   | TSqlFragmentIdentifier
@@ -110,56 +157,20 @@ class SqlFragment {
     }
   }
 
-  get query() {
+  get query(): string {
     return this.#query;
   }
 
-  get params() {
+  get params(): SqlBoundValues[] {
     return this.#params;
   }
 
-  toString(pretty = false) {
+  toString(pretty = false): string {
     return JSON.stringify(
       { query: this.query, params: this.params },
-      (key, value) =>
-        typeof value === "bigint" ? `${value.toString()}n` : value,
+      (_, value) => typeof value === "bigint" ? `${value.toString()}n` : value,
       pretty ? 2 : 0,
     );
-  }
-}
-
-export type TSqlFragmentIdentifier = SqlFragmentIdentifier;
-
-class SqlFragmentIdentifier {
-  #value = "";
-
-  #escape(value: string) {
-    return String(value)
-      .split(".")
-      .map((segment) => `"${segment.trim().replaceAll('"', "")}"`)
-      .join(".");
-  }
-
-  constructor(value: string) {
-    this.#value = value;
-  }
-
-  get value() {
-    return this.#escape(this.#value);
-  }
-}
-
-export type TSqlFragmentRaw = SqlFragmentRaw;
-
-class SqlFragmentRaw {
-  #value: string | number;
-
-  constructor(value: string | number) {
-    this.#value = value;
-  }
-
-  get value() {
-    return String(this.#value);
   }
 }
 
@@ -244,8 +255,7 @@ function sqlEq(data: [SqlBoundValues, SqlBoundValues]): SqlFragment;
  */
 function sqlEq(data: SqlBoundValues, data2: SqlBoundValues): SqlFragment;
 function sqlEq(data: SqlBoundValues, data2?: SqlBoundValues) {
-  // @ts-ignore
-  // biome-ignore lint/style/noNonNullAssertion: <explanation>
+  // @ts-ignore: ts stuff
   return eq(Array.isArray(data) && data2 === undefined ? data : [data, data2!]);
 }
 sql.eq = sqlEq;
@@ -321,7 +331,9 @@ sql.insert = (data: Record<string, SqlBoundValues>) => {
     Object.entries(data).filter(([_, v]) => v !== undefined),
   );
 
-  return sql`(${join(
-    Object.keys(filtered).map((key) => new SqlFragmentIdentifier(key)),
-  )}) values (${join(Object.values(filtered))})`;
+  return sql`(${
+    join(
+      Object.keys(filtered).map((key) => new SqlFragmentIdentifier(key)),
+    )
+  }) values (${join(Object.values(filtered))})`;
 };
