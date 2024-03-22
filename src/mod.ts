@@ -75,13 +75,13 @@ const join = (values: SqlBoundValues[], glue: SqlFragment = sql`, `) =>
       undefined,
     ) as SqlFragment;
 
-const eq = (value: [SqlBoundValues, SqlBoundValues]) =>
+const eq = (value: [SqlBoundValues, SqlBoundValues]): SqlFragment =>
   sql`${value[0]} = ${value[1]}`;
 
 const joinObject = (
   value: Record<string, SqlBoundValues>,
-  glue = new SqlFragment([", "], []),
-) =>
+  glue: SqlFragment = new SqlFragment([", "], []),
+): SqlFragment =>
   join(
     Object.entries(value)
       .filter(([_, v]) => v !== undefined)
@@ -91,8 +91,8 @@ const joinObject = (
 
 const joinObjectIdentifiers = (
   value: Record<string, SqlBoundValues>,
-  glue = new SqlFragment([", "], []),
-) =>
+  glue: SqlFragment = new SqlFragment([", "], []),
+): SqlFragment =>
   join(
     Object.entries(value)
       .filter(([_, v]) => v !== undefined)
@@ -177,17 +177,7 @@ class SqlFragment {
 /**
  * @example
  *
- * sql`select * from ${sql.id("foo")} where a = ${1} and b in ${[1, 2, 3]}`
- * // { query: 'select * from "foo" where a = ? and b in (?, ?, ?)', params: [1, 1, 2, 3] }
- */
-export const sql = (
-  strings: TemplateStringsArray,
-  ...args: SqlBoundValues[]
-): TSqlFragment => new SqlFragment(Array.from(strings), args);
-
-/**
- * @example
- *
+ * ```ts
  * sql`select * from ${sql.id("foo")}`
  * // { query: 'select * from "foo"', params: [] }
  *
@@ -196,93 +186,104 @@ export const sql = (
  *
  * sql`select * from ${sql.id("foo.\"bar")}`
  * // { query: 'select * from "foo"."bar"', params: [] }
+ * ```
  */
-sql.id = (value: string): TSqlFragmentIdentifier =>
+export type SqlId = typeof id;
+const id = (value: string): TSqlFragmentIdentifier =>
   new SqlFragmentIdentifier(value);
 
 /**
  * @example
  *
+ * ```ts
  * sql`select ${sql.raw("(1 + 1)")}`
  * // { query: 'select (1 + 1)', params: [] }
+ * ```
  */
-sql.raw = (value: string | number): TSqlFragmentRaw =>
+export type SqlRaw = typeof raw;
+const raw = (value: string | number): TSqlFragmentRaw =>
   new SqlFragmentRaw(value);
 
 /**
  * @example
  *
+ * ```ts
  * sql`select ${sql.if(true, () => sql`(1 + 1)`)}`
  * // { query: 'select (1 + 1)', params: [] }
  *
  * sql`select ${sql.if(false, () => sql`(1 + 1)`)}`
  * // { query: 'select ', params: [] }
+ * ```
  */
-sql.if = (cond: boolean | (() => boolean), value: () => SqlBoundValues) =>
+export type SqlIf = typeof sqlIf;
+const sqlIf = (
+  cond: boolean | (() => boolean),
+  value: () => SqlBoundValues,
+): SqlBoundValues =>
   (typeof cond === "function" ? cond() : cond) ? value() : undefined;
 
 /**
  * @example
  *
+ * ```ts
  * sql`select ${sql.if(true, () => sql`(1 + 1)`, () => 1)}`
  * // { query: 'select (1 + 1)', params: [] }
  *
  * sql`select ${sql.if(false, () => sql`(1 + 1)`, () => 1)}`
  * // { query: 'select ?', params: [1] }
+ * ```
  */
-sql.ternary = (
+export type SqlTernary = typeof ternary;
+const ternary = (
   cond: boolean | (() => boolean),
   left: () => SqlBoundValues,
   right: () => SqlBoundValues,
-) => ((typeof cond === "function" ? cond() : cond) ? left() : right());
+): SqlBoundValues => ((typeof cond === "function" ? cond() : cond)
+  ? left()
+  : right());
 
 /**
  * Undefined values will be filtered out.
  *
  * @example
  *
+ * ```ts
  * sql`select * from foo where ${sql.eq([sql.id("foo"), 1])}`
  * // { query: 'select "foo" = ?', params: [1] }
- */
-function sqlEq(data: [SqlBoundValues, SqlBoundValues]): SqlFragment;
-/**
- * Undefined values will be filtered out.
- *
- * @example
  *
  * sql`select * from foo where ${sql.eq(sql.id("foo"), 1)}`
  * // { query: 'select "foo" = ?', params: [1] }
+ * ```
  */
+export type SqlEq = typeof sqlEq;
+function sqlEq(data: [SqlBoundValues, SqlBoundValues]): SqlFragment;
 function sqlEq(data: SqlBoundValues, data2: SqlBoundValues): SqlFragment;
 function sqlEq(data: SqlBoundValues, data2?: SqlBoundValues) {
   // @ts-ignore: ts stuff
   return eq(Array.isArray(data) && data2 === undefined ? data : [data, data2!]);
 }
-sql.eq = sqlEq;
 
 /**
  * Undefined values will be filtered out.
  *
  * @example
  *
+ * ```ts
  * sql`select * from foo where  ${sql.join([sql`e = 1`, sql`e = ${2}`, 3])}`
  * // { query: 'select * from foo where e = 1 or e = ? or ?', params: [2, 3] }
- */
-function sqlJoin(values: SqlBoundValues[], glue?: SqlFragment): SqlFragment;
-/**
- * Undefined values will be filtered out.
- *
- * @example
  *
  * sql`select * from foo where  ${sql.join(undefined, sql`e = 1`, sql`e = ${2}`, 3)}`
  * // { query: 'select * from foo where e = 1 or e = ? or ?', params: [2, 3] }
+ * ```
  */
+export type SqlJoin = typeof sqlJoin;
+function sqlJoin(values: SqlBoundValues[], glue?: SqlFragment): SqlFragment;
 function sqlJoin(glue?: SqlFragment, ...values: SqlBoundValues[]): SqlFragment;
 function sqlJoin(
   arg1?: SqlBoundValues[] | SqlFragment,
   arg2?: SqlBoundValues | SqlFragment,
   ...args: SqlBoundValues[]
-) {
+): SqlFragment {
   if (Array.isArray(arg1)) {
     return join(arg1, (arg2 as SqlFragment) ?? sql`, `);
   }
@@ -294,28 +295,34 @@ function sqlJoin(
   throw new TypeError("Invalid arguments");
 }
 
-sql.join = sqlJoin;
-
 /**
  * Undefined values will be filtered out.
  *
  * @example
  *
+ * ```ts
  * sql`update foo set ${sql.joinObject({ a: 1, b: sql.raw(2)})}`
  * // { query: 'update foo set ? = ?, ? = 2', params: ["a", 1, "b"] }
+ * ```
  */
-sql.joinObject = (values: Record<string, SqlBoundValues>, glue = sql`, `) =>
-  joinObject(values, glue);
+export type SqlJoinObject = typeof sqlJoinObject;
+const sqlJoinObject = (
+  values: Record<string, SqlBoundValues>,
+  glue: SqlFragment = sql`, `,
+): SqlFragment => joinObject(values, glue);
 
 /**
  * Undefined values will be filtered out.
  *
  * @example
  *
+ * ```ts
  * sql`update foo set ${sql.set({ a: 1, b: sql.raw(2)})}`
  * // { query: 'update foo set "a" = ?, "b" = 2', params: [1] }
+ * ```
  */
-sql.set = (value: Record<string, SqlBoundValues>) =>
+export type SqlSet = typeof set;
+const set = (value: Record<string, SqlBoundValues>): SqlFragment =>
   joinObjectIdentifiers(value);
 
 /**
@@ -323,10 +330,13 @@ sql.set = (value: Record<string, SqlBoundValues>) =>
  *
  * @example
  *
+ * ```ts
  * sql`insert into foo ${sql.insert({ a: 1, b: sql.raw(2)})}`
  * // { query: 'insert into foo ("a", "b") values (?, 2)', params: [1] }
+ * ```
  */
-sql.insert = (data: Record<string, SqlBoundValues>) => {
+export type SqlInsert = typeof insert;
+const insert = (data: Record<string, SqlBoundValues>): SqlFragment => {
   const filtered = Object.fromEntries(
     Object.entries(data).filter(([_, v]) => v !== undefined),
   );
@@ -337,3 +347,41 @@ sql.insert = (data: Record<string, SqlBoundValues>) => {
     )
   }) values (${join(Object.values(filtered))})`;
 };
+
+export type Sql = {
+  (strings: TemplateStringsArray, ...args: SqlBoundValues[]): TSqlFragment;
+
+  id: SqlId;
+  raw: SqlRaw;
+  if: SqlIf;
+  ternary: SqlTernary;
+  eq: SqlEq;
+  join: SqlJoin;
+  joinObject: SqlJoinObject;
+  set: SqlSet;
+  insert: SqlInsert;
+};
+
+/**
+ * @example
+ *
+ * ```ts
+ * sql`select * from ${sql.id("foo")} where a = ${1} and b in ${[1, 2, 3]}`
+ * // { query: 'select * from "foo" where a = ? and b in (?, ?, ?)', params: [1, 1, 2, 3] }
+ * ```
+ */
+export const sql: Sql = (
+  strings: TemplateStringsArray,
+  ...args: SqlBoundValues[]
+): TSqlFragment => new SqlFragment(Array.from(strings), args);
+
+sql.id = id;
+sql.raw = raw;
+sql.if = sqlIf;
+sql.ternary = ternary;
+sql.eq = sqlEq;
+sql.join = sqlJoin;
+sql.joinObject = sqlJoinObject;
+sql.set = set;
+
+sql.insert = insert;

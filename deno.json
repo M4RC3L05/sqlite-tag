@@ -1,6 +1,6 @@
 {
   "name": "@m4rc3l05/sqlite-tag",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "exports": "./src/mod.ts",
   "lock": false,
   "imports": {
