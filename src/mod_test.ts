@@ -1,6 +1,5 @@
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "node:buffer";
+import { assertEquals, describe, it } from "./test_deps.ts";
 import { sql } from "./mod.ts";
 
 describe("sql``", () => {
