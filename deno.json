@@ -4,8 +4,8 @@
   "exports": "./src/mod.ts",
   "tasks": {
     "dev:boot": "git config core.hooksPath ./.bin/git-hooks/ && deno task deps",
-    "deps:lock": "deno cache --lock=deno.lock --lock-write src/mod.ts",
-    "deps": "deno cache --reload --lock=deno.lock src/mod.ts"
+    "deps:lock": "deno cache --lock=deno.lock --lock-write src/*.ts",
+    "deps": "deno cache --reload --lock=deno.lock src/*.ts"
   },
   "publish": {
     "include": [
