@@ -11,6 +11,10 @@ describe("sql``", () => {
     );
   });
 
+  it("should create a new sql fragment and be the same", () => {
+    assertEquals(sql`select * from foo`.query, sql`select * from foo`.query);
+  });
+
   it("should bind primitive sql values correctly", () => {
     const s =
       sql`select * from foo where a = ${1} and b = ${"foo"} and c is ${null} and d = ${10n} and e = ${
@@ -38,6 +42,27 @@ describe("sql``", () => {
           "foo",
         ],
       }),
+    );
+  });
+
+  it("should bind primitive sql values correctly and be the same", () => {
+    assertEquals(
+      sql`select * from foo where a = ${1} and b = ${"foo"} and c is ${null} and d = ${10n} and e = ${
+        Buffer.from(
+          "",
+        )
+      } and f = ${new Uint8Array()} and g = ${undefined} and h in ${[
+        1,
+        "foo",
+      ]}`.query,
+      sql`select * from foo where a = ${1} and b = ${"foo"} and c is ${null} and d = ${10n} and e = ${
+        Buffer.from(
+          "",
+        )
+      } and f = ${new Uint8Array()} and g = ${undefined} and h in ${[
+        1,
+        "foo",
+      ]}`.query,
     );
   });
 
@@ -86,6 +111,81 @@ describe("sql``", () => {
       }),
     );
   });
+});
+
+it("should bind custom sql values correctly and be the same", () => {
+  assertEquals(
+    sql`select * from ${sql.id("foo.bar")} and ${
+      sql.raw(
+        "a-",
+      )
+    } = 'foo' and b = ${sql.if(true, () => 1)} ${
+      sql.if(
+        false,
+        () => sql`c = 1`,
+      )
+    } and ${sql.eq([sql.id("d"), 2])} and ${
+      sql.join(
+        [sql`e = 1`, sql`e = ${2}`, 3, sql.raw(4)],
+        sql` or `,
+      )
+    } and ${sql.joinObject({ a: 1, b: sql.raw(2) })} and ${
+      sql.set({
+        a: "b",
+        b: 1,
+        c: sql`1`,
+        d: sql.id("foo.bar"),
+      })
+    } and (${
+      sql.ternary(
+        true,
+        () => 1,
+        () => sql.id("a.b.c"),
+      )
+    } or ${
+      sql.ternary(
+        false,
+        () => 1,
+        () => sql.id("a.b.c"),
+      )
+    }) and (${sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })})`
+      .query,
+    sql`select * from ${sql.id("foo.bar")} and ${
+      sql.raw(
+        "a-",
+      )
+    } = 'foo' and b = ${sql.if(true, () => 1)} ${
+      sql.if(
+        false,
+        () => sql`c = 1`,
+      )
+    } and ${sql.eq([sql.id("d"), 2])} and ${
+      sql.join(
+        [sql`e = 1`, sql`e = ${2}`, 3, sql.raw(4)],
+        sql` or `,
+      )
+    } and ${sql.joinObject({ a: 1, b: sql.raw(2) })} and ${
+      sql.set({
+        a: "b",
+        b: 1,
+        c: sql`1`,
+        d: sql.id("foo.bar"),
+      })
+    } and (${
+      sql.ternary(
+        true,
+        () => 1,
+        () => sql.id("a.b.c"),
+      )
+    } or ${
+      sql.ternary(
+        false,
+        () => 1,
+        () => sql.id("a.b.c"),
+      )
+    }) and (${sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })})`
+      .query,
+  );
 });
 
 describe("sql.id()", () => {
