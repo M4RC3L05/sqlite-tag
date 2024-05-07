@@ -1,5 +1,4 @@
-import { Buffer } from "node:buffer";
-import { assertEquals, describe, it } from "./test_deps.ts";
+import { assertEquals, Buffer, describe, it } from "./test_deps.ts";
 import { sql } from "./mod.ts";
 
 describe("sql``", () => {
