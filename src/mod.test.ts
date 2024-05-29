@@ -1,4 +1,4 @@
-import { assertEquals, Buffer, describe, it } from "./test_deps.ts";
+import { assertEquals, Buffer, describe, it } from "./test-deps.ts";
 import { sql } from "./mod.ts";
 
 describe("sql``", () => {
@@ -100,14 +100,16 @@ describe("sql``", () => {
         () => 1,
         () => sql.id("a.b.c"),
       )
-    }) and (${sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })})`;
+    }) and (${
+      sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })
+    }) and ${sql.if(true, 1)} and ${sql.ternary(true, 1, 2)}`;
 
     assertEquals(
       s.toString(),
       JSON.stringify({
         query:
-          'select * from "foo"."bar" and a- = \'foo\' and b = ?  and "d" = ? and e = 1 or e = ? or ? or 4 and ? = ?, ? = 2 and "a" = ?, "b" = ?, "c" = 1, "d" = "foo"."bar" and (? or "a"."b"."c") and (("foo", "biz", "buz") values (?, a, foo))',
-        params: [1, 2, 2, 3, "a", 1, "b", "b", 1, 1, "bar"],
+          'select * from "foo"."bar" and a- = \'foo\' and b = ?  and "d" = ? and e = 1 or e = ? or ? or 4 and ? = ?, ? = 2 and "a" = ?, "b" = ?, "c" = 1, "d" = "foo"."bar" and (? or "a"."b"."c") and (("foo", "biz", "buz") values (?, a, foo)) and ? and ?',
+        params: [1, 2, 2, 3, "a", 1, "b", "b", 1, 1, "bar", 1, 1],
       }),
     );
   });
@@ -148,7 +150,9 @@ it("should bind custom sql values correctly and be the same", () => {
         () => 1,
         () => sql.id("a.b.c"),
       )
-    }) and (${sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })})`
+    }) and (${
+      sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })
+    }) and ${sql.if(true, 1)} and ${sql.ternary(true, 1, 2)}`
       .query,
     sql`select * from ${sql.id("foo.bar")} and ${
       sql.raw(
@@ -183,7 +187,9 @@ it("should bind custom sql values correctly and be the same", () => {
         () => 1,
         () => sql.id("a.b.c"),
       )
-    }) and (${sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })})`
+    }) and (${
+      sql.insert({ foo: "bar", biz: sql`a`, buz: sql.raw("foo") })
+    }) and ${sql.if(true, 1)} and ${sql.ternary(true, 1, 2)}`
       .query,
   );
 });
@@ -235,6 +241,9 @@ describe("sql.if()", () => {
       ),
       1,
     );
+
+    assertEquals(sql.if(true, 1), 1);
+    assertEquals(sql.if(() => true, 1), 1);
   });
 });
 
@@ -256,6 +265,9 @@ describe("sql.ternary", () => {
       ),
       2,
     );
+
+    assertEquals(sql.ternary(false, 1, 2), 2);
+    assertEquals(sql.ternary(() => false, 1, 2), 2);
   });
 
   it("should return left if condition is true", () => {
@@ -275,6 +287,9 @@ describe("sql.ternary", () => {
       ),
       1,
     );
+
+    assertEquals(sql.ternary(true, 1, 2), 1);
+    assertEquals(sql.ternary(() => true, 1, 2), 1);
   });
 });
 
@@ -300,12 +315,12 @@ describe("sql.eq()", () => {
 
       assertEquals(
         sql.eq([undefined, sql`bar`]).toString(),
-        JSON.stringify({ query: " = bar", params: [] }),
+        JSON.stringify({ query: "", params: [] }),
       );
 
       assertEquals(
         sql.eq([sql`bar`, undefined]).toString(),
-        JSON.stringify({ query: "bar = ", params: [] }),
+        JSON.stringify({ query: "", params: [] }),
       );
     });
   });
@@ -331,12 +346,12 @@ describe("sql.eq()", () => {
 
       assertEquals(
         sql.eq(sql`bar`, undefined).toString(),
-        JSON.stringify({ query: "bar = ", params: [] }),
+        JSON.stringify({ query: "", params: [] }),
       );
 
       assertEquals(
         sql.eq(undefined, sql`bar`).toString(),
-        JSON.stringify({ query: " = bar", params: [] }),
+        JSON.stringify({ query: "", params: [] }),
       );
     });
   });
