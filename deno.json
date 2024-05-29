@@ -1,6 +1,6 @@
 {
   "name": "@m4rc3l05/sqlite-tag",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "exports": "./src/mod.ts",
   "tasks": {
     "deps:lock": "deno cache --lock=deno.lock --lock-write src/*.ts",
