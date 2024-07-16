@@ -4,7 +4,8 @@
     "specifiers": {
       "jsr:@std/assert@0.225.3": "jsr:@std/assert@0.225.3",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
-      "jsr:@std/testing@0.224.0": "jsr:@std/testing@0.224.0"
+      "jsr:@std/testing@0.224.0": "jsr:@std/testing@0.224.0",
+      "npm:@types/node": "npm:@types/node@18.16.19"
     },
     "jsr": {
       "@std/assert@0.225.3": {
@@ -18,6 +19,12 @@
       },
       "@std/testing@0.224.0": {
         "integrity": "371b8a929aa7132240d5dd766a439be8f780ef5c176ab194e0bcab72370c761e"
+      }
+    },
+    "npm": {
+      "@types/node@18.16.19": {
+        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
+        "dependencies": {}
       }
     }
   },
